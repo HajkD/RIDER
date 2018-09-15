@@ -2,7 +2,127 @@
 
 > Matthias Benoit, Hajk-Georg Drost, Marco Catoni, Jerzy Paszkowski. __Rider__. bioRxiv (2018). doi: 
 
-## Clustering
+- [1. De novo Annotation of RIDER retrotransposons in the plant kingdom ](#de-novo-annotation-of-rider-retrotransposons-in-the-plant-kingdom)
+    - [1.1. Functional de novo annotation of retrotransposons with LTRpred](#functional-de-novo-annotation-of-retrotransposons-with-ltrpred)
+    - [1.2. Annotation Resources](#annotation-resources)
+    - [1.3. Running LTRpred](#running-ltrpred)
+    - [1.4. Rider Clustering Across Species](#rider-clustering-across-species)
+
+# `De novo` Annotation of RIDER retrotransposons in the plant kingdom
+
+## Functional _de novo_ annotation of retrotransposons with `LTRpred`
+
+Please install the following R packages before running the reproducible scripts:
+
+```r
+install.packages("dplyr")
+install.packages("ggplot2")
+install.packages("readr")
+install.packages("readxl")
+
+source("http://bioconductor.org/biocLite.R")
+biocLite('biomartr')
+
+biocLite("devtools")
+biocLite("HajkD/LTRpred")
+```
+
+__Please also make sure that you follow the [INSTALLATION instructions](https://hajkd.github.io/LTRpred/articles/Introduction.html#installation)
+of the `LTRpred` package to install all __command line tools__ that `LTRpred` depends on. Otherwise, `LTRpred` will not generate proper annotation files.__
+
+## Annotation Resources
+
+### tRNAs
+
+We retrieved tRNA sequences in `*.fasta` format from the following databases:
+
+- [GtRNAdb](http://gtrnadb2009.ucsc.edu/download.html)
+- [plantRNA database](http://plantrna.ibmp.cnrs.fr/plantrna/search/;jsessionid=14635D3979E56DA4F076CE252D4E2078)
+
+We combined tRNA sequences from both databases to have a comprehensive collection of tRNA sequences
+specific for each kingdom of life.
+
+### HMM Models
+
+We retrieved the HMM models for protein domain annotation of the region
+between de novo predicted LTRs from [Pfam](http://pfam.xfam.org):
+
+  - RNA dependent RNA polymerase: [Overview](http://pfam.xfam.org/clan/CL0027)
+      - [RdRP_1](http://pfam.xfam.org/family/PF00680#tabview=tab6)
+      - [RdRP_2](http://pfam.xfam.org/family/PF00978#tabview=tab6)
+      - [RdRP_3](http://pfam.xfam.org/family/PF00998#tabview=tab6)
+      - [RdRP_4](http://pfam.xfam.org/family/PF02123#tabview=tab6)
+      - [RVT_1](http://pfam.xfam.org/family/PF00078#tabview=tab6)
+      - [RVT_2](http://pfam.xfam.org/family/PF07727#tabview=tab6)
+      - [Integrase DNA binding domain](http://pfam.xfam.org/family/PF00552#tabview=tab6)
+      - [Integrase Zinc binding domain](http://pfam.xfam.org/family/PF02022#tabview=tab6)
+      - [Retrotrans_gag](http://pfam.xfam.org/family/PF03732#tabview=tab6)
+      - [RNase H](http://pfam.xfam.org/family/PF00075#tabview=tab6)
+      - [Integrase core domain](http://pfam.xfam.org/family/PF00665#tabview=tab6)
+
+## Running `LTRpred`
+
+__Please make sure that you follow the [INSTALLATION instructions](https://hajkd.github.io/LTRpred/articles/Introduction.html#installation)
+of the `LTRpred` package to install all __command line tools__ that `LTRpred` depends on. Otherwise, `LTRpred` will not generate proper annotation files.__
+
+
+The following code can be run on a computer with `n` cores. Please be aware that 
+computation times might correspond to days due to the genome sizes of the respective species.
+
+For further details about `LTRpred` please consult the [LTRpred: Introduction Vignette](https://hajkd.github.io/LTRpred/articles/Introduction.html).
+
+We assume that users will store the genome assembly files in `fasta` format
+of the species `Asterids:` Capsicum annuum, Capsicum baccatum MLFT02_5, Capsicum chinense MCIT02_5, Coffea canephora, Petunia axillaris, Phytophthora inflata, Solanum arcanum, Solanum habrochaites, Solanum lycopersicum, Solanum melongena, Solanum pennellii, Solanum pimpinellifolium, Solanum tuberosum; `Rosids:` Arabidopsis thaliana, Vitis vinifera, and Cucumis melo; `monocots:` Oryza sativa in a folder named `genomes/` which will then be passed
+as string to the argument `genome.folder` in the `LTRpred.meta()` function.
+All annotation files generated with `LTRpred` are then stored in the new folder
+`LTRpred_results` as is specified in the argument `output.folder` in the function `LTRpred.meta()`.
+
+```r
+library(LTRpred)
+
+# generate LTRpred annotations for all genomes stored in folder genomes/
+LTRpred::LTRpred.meta(
+      genome.folder = "genomes",
+      output.folder = "LTRpred_results",
+      cluster     = FALSE,
+      cores       = 32,
+      copy.number.est = FALSE,
+      minlenltr   = 100,
+      maxlenltr   = 5000,
+      mindistltr  = 4000,
+      maxdistltr  = 30000,
+      mintsd      = 3,
+      maxtsd      = 20,
+      vic         = 80,
+      overlaps    = "no",
+      xdrop        = 7,
+      motifmis    = 1,
+      pbsradius   = 60,
+      pbsalilen   = c(8,40),
+      pbsoffset   = c(0,10),
+      quality.filter = TRUE,
+      n.orfs      = 0
+      )
+
+# import all LTRpred annotations for all individual species
+# and combine them to a large meta-annotation file
+meta_tbl <- LTRpred::meta.summarize(
+    result.folder  = "LTRpred_results/",
+    ltr.similarity = 80,
+    quality.filter = TRUE,
+    n.orfs         = 0)
+
+# store the large meta-annotation file locally as `*.tsv` file
+readr::write_tsv(meta_tbl, "LTRpred_Rider_MetaTable.tsv")
+```
+
+Users interested in the exact algorithms and procedures running inside of the `LTRpred.meta()` function
+can access the `LTRpred` open-source code [here](https://github.com/HajkD/LTRpred/tree/master/R).
+
+## Rider Clustering Across Species 
+
+
+
 
 ```r
 LTRpred_Rider_MetaTable <- LTRpred::read.ltrpred("LTRpred_Rider_MetaTable.tsv")
