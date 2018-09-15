@@ -11,6 +11,12 @@
 # `De novo` Annotation of RIDER retrotransposons in the plant kingdom
 
 ## Functional _de novo_ annotation of retrotransposons with `LTRpred`
+=======
+
+## Functional _de novo_ annotation of Solanocea LTR retrotransposons
+
+For the computational reproducibility of _de novo_ annotations of LTR retrotransposons we implemented the R package [LTRpred](https://hajkd.github.io/LTRpred/).
+`LTRpred` calls the command line tools `suffixerator`, `LTRharvest` (Ellinghaus et al., 2008), and `LTRdigest` (Steinbiss et al., 2009), which are part of the [GenomeTools library](http://genometools.org/) (Gremme et al., 2013) to screen for repeated LTRs, specific sequence motifs such as primer binding sites (PBS), polypurine tract motifs (PPT), and target site duplications (TSD) and for conserved protein domains such as reverse transcriptase (gag), integrase DNA binding domain, integrase Zinc binding domain, RNase H, and the integrase core domain. Subsequently, `LTRpred` implements customized parser functions to import `LTRdigest` output and structures the data in a `tidy data format` (Wickham, 2014) which subsequently enables automation of false positive curation. In a second step, open reading frame (ORF) prediction is performed by a customized wrapper function that runs the command line tool `usearch` (Edgar, 2010). This automated step allows to automatically filter out RTEs that might have conserved protein domains such as an integrase or a reverse transcriptase, but fail to have ORFs and thus are not expressed. In a third step, RTE family clustering is performed using the command line tool `vsearch` (Rognes et al., 2016) which defines family members by >90% sequence homology of the full element to each other. In a fourth step, an automated `hmmer search` (Finn et al., 2011) against the `Dfam` database (Hubley et al., 2016) is performed to assign super-family associations such as Copia or Gypsy by comparing the protein domains of de novo predicted RTEs with already annotated RTEs in the `Dfam` database. For each step, `LTRpred` implements customized parser functions to import `usearch`, `vsearch`, and `Dfam` output and transforms this output in `tidy data format` for subsequent automated false positive curation. In a fifth step, for each predicted element the count and proportion (count divided by element length) of CHH, CHG, CG, and NNN motifs are quantified for the entire element, the 3’ LTR and 5’ LTR separately. In a sixth step, automated false positive curation is performed by the `LTRpred` function `quality.filter()` to conservatively reduce false positive predictions.  
 
 Please install the following R packages before running the reproducible scripts:
 
@@ -31,6 +37,11 @@ __Please also make sure that you follow the [INSTALLATION instructions](https://
 of the `LTRpred` package to install all __command line tools__ that `LTRpred` depends on. Otherwise, `LTRpred` will not generate proper annotation files.__
 
 ## Annotation Resources
+=======
+Please also make sure that you follow the [INSTALLATION instructions](https://hajkd.github.io/LTRpred/articles/Introduction.html#installation)
+of the `LTRpred` package to install all __command line tools__ that `LTRpred` depends on.
+
+## Resources for Annotation
 
 ### tRNAs
 
@@ -67,6 +78,8 @@ of the `LTRpred` package to install all __command line tools__ that `LTRpred` de
 
 
 The following code can be run on a computer with `n` cores. Please be aware that 
+=======
+The following code can be run on a computer with 4 cores. Please be aware that 
 computation times might correspond to days due to the genome sizes of the respective species.
 
 For further details about `LTRpred` please consult the [LTRpred: Introduction Vignette](https://hajkd.github.io/LTRpred/articles/Introduction.html).
@@ -123,6 +136,13 @@ can access the `LTRpred` open-source code [here](https://github.com/HajkD/LTRpre
 
 
 
+=======
+### Generating _de novo_ LTR retrotransposon annotation for XY Solanocea genomes
+
+
+
+
+## Clustering
 
 ```r
 LTRpred_Rider_MetaTable <- LTRpred::read.ltrpred("LTRpred_Rider_MetaTable.tsv")
