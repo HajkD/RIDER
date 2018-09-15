@@ -10,9 +10,6 @@
 
 # `De novo` Annotation of RIDER retrotransposons in the plant kingdom
 
-## Functional _de novo_ annotation of retrotransposons with `LTRpred`
-=======
-
 ## Functional _de novo_ annotation of Solanocea LTR retrotransposons
 
 For the computational reproducibility of _de novo_ annotations of LTR retrotransposons we implemented the R package [LTRpred](https://hajkd.github.io/LTRpred/).
@@ -37,11 +34,8 @@ __Please also make sure that you follow the [INSTALLATION instructions](https://
 of the `LTRpred` package to install all __command line tools__ that `LTRpred` depends on. Otherwise, `LTRpred` will not generate proper annotation files.__
 
 ## Annotation Resources
-=======
 Please also make sure that you follow the [INSTALLATION instructions](https://hajkd.github.io/LTRpred/articles/Introduction.html#installation)
 of the `LTRpred` package to install all __command line tools__ that `LTRpred` depends on.
-
-## Resources for Annotation
 
 ### tRNAs
 
@@ -133,13 +127,6 @@ Users interested in the exact algorithms and procedures running inside of the `L
 can access the `LTRpred` open-source code [here](https://github.com/HajkD/LTRpred/tree/master/R).
 
 ## Rider Clustering Across Species 
-
-
-
-=======
-### Generating _de novo_ LTR retrotransposon annotation for XY Solanocea genomes
-
-
 
 
 ## Clustering
