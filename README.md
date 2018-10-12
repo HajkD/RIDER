@@ -8,7 +8,6 @@
     - [1.3. Running LTRpred](#running-ltrpred)
     - [1.4. Rider Clustering Across Species](#rider-clustering-across-species)
 
-# `De novo` Annotation of RIDER retrotransposons in the plant kingdom
 
 ## Functional _de novo_ annotation of Solanocea LTR retrotransposons
 
@@ -634,9 +633,60 @@ metablastr::motif_enrichment("Slycopersicum_RiderCoordinates_All.fa",
 ```
 
 
+## Calculation of N50 metric for Solanocaea species
 
+Define N50 computation function.
 
+```r
+N50 <- function(len) {
+# sort scaffold or chromosome lenghts in descending order
+len.sorted <- rev(sort(len))
+# compute N50 over all scaffold or chromosome lenghts in Mbp
+N50 <- len.sorted[cumsum(len.sorted) >= sum(len.sorted)*0.5][1] / 1000000
+return(N50)
+}
+```
 
+### Slycopersicum
 
+```r
+Slycopersicum <- biomartr::read_genome("Slycopersicum.fa")
+Slycopersicum_N50 <- N50(Slycopersicum@ranges@width)
+```
+
+### Sarcanum
+
+```r
+Sarcanum <- biomartr::read_genome("Sarcanum_LA2157.fasta.gz")
+Sarcanum_N50 <- N50(Sarcanum@ranges@width)
+```
+
+### Spennellii 
+
+```r
+Spennellii <- biomartr::read_genome("Spennellii.fa")
+Spennellii_N50 <- N50(Spennellii@ranges@width)
+```
+
+### Shabrochaites
+
+```r
+Shabrochaites <- biomartr::read_genome("Shabrochaites_LYC4.fasta.gz")
+Shabrochaites_N50 <- N50(Shabrochaites@ranges@width)
+```
+
+### Stuberosum
+
+```r
+Stuberosum <- biomartr::read_genome("Stuberosum.fa")
+Stuberosum_N50 <- N50(Stuberosum@ranges@width)
+```
+
+### Spimpinellifolium 
+
+```r
+Spimpinellifolium <- biomartr::read_genome("Spimpinellifolium.fa")
+Spimpinellifolium_N50 <- N50(Spimpinellifolium@ranges@width)
+```
 
 
