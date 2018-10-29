@@ -232,7 +232,9 @@ biomartr::meta.retrieval(kingdom = "plant",
 
 Next, we assume that all plant genomes are stored in the folder `plant`.
 Please make sure that you manually remove the `documentation` folder
-in the folder `plant` before running the next command.
+in the folder `plant` before running the next command. In addition,
+you will need to store the following reference sequences ([rider_annotation_85_sequence_file](), [Rider_LTR_5.fasta]()) in the same folder
+from which you run the following `metablastr` commands.
 
 ### Distribution of full RIDER retrotransposon sequence across plant kingdom
 
