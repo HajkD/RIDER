@@ -7,6 +7,17 @@
     - [1.2. Annotation Resources](#annotation-resources)
     - [1.3. Running LTRpred](#running-ltrpred)
     - [1.4. Rider Clustering Across Species](#rider-clustering-across-species)
+    
+- [2. Determine the distribution of RIDER-like retrotransposons in the plant kingdom](#determine-the-distribution-of-rider-like-retrotransposons-in-the-plant-kingdom)
+    - [2.1 Annotating short and long LTR sequences of the RIDER family](#annotating-short-and-long-ltr-sequences-of-the-rider-family)
+    - [2.2 Visualizing RIDER LTR distribution densities across species](#visualizing-rider-ltr-distribution-densities-across-species)
+    
+- [3. Motif Enrichment Analysis](#motif-enrichment)
+
+The following sections enable to computationally reproduce all LTR retrotransposon 
+annotation and analytics steps. Please make sure that you follow all steps
+and install all necessary software tools to be able to reproduce the data generated
+for the paper.
 
 
 ## Functional _de novo_ annotation of Solanocea LTR retrotransposons
@@ -70,10 +81,7 @@ __Please make sure that you follow the [INSTALLATION instructions](https://hajkd
 of the `LTRpred` package to install all __command line tools__ that `LTRpred` depends on. Otherwise, `LTRpred` will not generate proper annotation files.__
 
 
-The following code can be run on a computer with `n` cores. Please be aware that 
-=======
-The following code can be run on a computer with 4 cores. Please be aware that 
-computation times might correspond to days due to the genome sizes of the respective species.
+The following code can be run on a computer with `n` cores. Please be aware that computation times might correspond to days due to the genome sizes of the respective species.
 
 For further details about `LTRpred` please consult the [LTRpred: Introduction Vignette](https://hajkd.github.io/LTRpred/articles/Introduction.html).
 
@@ -124,15 +132,27 @@ readr::write_tsv(meta_tbl, "LTRpred_Rider_MetaTable.tsv")
 
 Users interested in the exact algorithms and procedures running inside of the `LTRpred.meta()` function
 can access the `LTRpred` open-source code [here](https://github.com/HajkD/LTRpred/tree/master/R).
+Alternatively, it is also possible to write a `for`-loop around the function 
+`LTRpred()` to run LTRpred annotations individually for all species.
+
 
 ## Rider Clustering Across Species 
+
+`RIDER` clustering denotes the analytical step in which `LTRpred` annotated 
+retrotransposon sequences are clustered across species using an optimal global alignment approach (full dynamic programming Needleman-Wunsch)
+(performed using the tool [VSEARCH](https://github.com/torognes/vsearch)).
 
 
 ## Clustering
 
 ```r
+# import the LTRpred_Rider_MetaTable.tsv file generated in the previous annotation step
 LTRpred_Rider_MetaTable <- LTRpred::read.ltrpred("LTRpred_Rider_MetaTable.tsv")
 LTRpred_Rider_MetaTable <- dplyr::select(LTRpred_Rider_MetaTable, -Clust_Cluster, -Clust_Target, -Clust_Perc_Ident)
+
+
+
+
 
 
 cluster <- read.uc("solanocea.uc")
@@ -162,7 +182,6 @@ meta_tbl_sarcanum_shabrochaites_spimpinellifolium <-
       stringr::str_detect(species, "Spennellii$")
   )
   
-table(meta_tbl_sarcanum_shabrochaites_spimpinellifolium$species)
 
 Spennellii_Rider <- dplyr::filter(LTRpred_Rider_MetaTable_joined_85,stringr::str_detect(species, "Spennellii$"))
 Spimpinellifolium_Rider <- dplyr::filter(LTRpred_Rider_MetaTable_joined_85,stringr::str_detect(species, "Spimpinellifolium"))
@@ -192,14 +211,39 @@ LTRpred::pred2fasta(
 )
 ```
 
-## BLAST Analyses
+## Determine the distribution of RIDER-like retrotransposons in the plant kingdom
+
+For determining the distribution of RIDER-like retrotransposons in the plant kingdom 
+we use the R packages [biomartr](https://github.com/ropensci/biomartr) and [metablastr](https://github.com/HajkD/metablastr) which 
+need to be installed before running the following commands.
+
+The `biomartr` package enables large-scale retrieval of all plant genomes
+from `NCBI RefSeq`.
 
 ```r
-subj_genomes_all_plants <- file.path("rider_blast_genomes/Plants", 
-list.files("rider_blast_genomes/Plants/"))
+# retrieve all >110 plant genomes stored at NCBI RefSeq
+install.packages("magrittr")
+library(magrittr)
+biomartr::meta.retrieval(kingdom = "plant", 
+               db = "refseq", 
+               type = "genome") %>% 
+    biomartr::clean.retrieval()
+```
 
+Next, we assume that all plant genomes are stored in the folder `plant`.
+Please make sure that you manually remove the `documentation` folder
+in the folder `plant` before running the next command.
+
+### Distribution of full RIDER retrotransposon sequence across plant kingdom
+
+```r
+# retrieve all genome names
+subj_genomes_all_plants <- file.path("plant", 
+list.files("plant"))
+# run BLAST analysis to determine RIDER-like element distribution across the
+# plant kingdom
 Rider_kingdom_blast <- metablastr::blast_genomes(
-  "rider_annotation_85_sequence_file.fasta",
+  "rider_annotation_85_sequence_file.fasta", # reference RIDER (query) sequence
   subj_genomes_all_plants,
   task = "blastn",
   blast_output_path = "rider_genome_blast",
@@ -207,13 +251,37 @@ Rider_kingdom_blast <- metablastr::blast_genomes(
   evalue = 1E-5,
   max.target.seqs = 5000
 )
-
+# store BLAST results as `*.tsv` file
 readr::write_tsv(Rider_kingdom_blast, "Rider_kingdom_blast_results_all.tsv")
 ```
 
-## Extract Rider short and long LTR sequences
+### Distribution of only RIDER LTR sequence across plant kingdom
+
 ```r
-# Extract Rider short and long LTR sequences
+# retrieve all genome names
+subj_genomes_all_plants <- file.path("plant", list.files("plant"))
+# run BLAST analysis to determine RIDER LTR distribution across the
+# plant kingdom
+Rider_LTR <- metablastr::blast_genomes(
+  "Rider_LTR_5.fasta", # reference RIDER LTR sequence (= query) 
+  subj_genomes_all_plants,
+  task = "blastn",
+  blast_output_path = "rider_solo_ltr_blast_result",
+  cores = 28
+)
+# store BLAST results as `*.tsv` file
+readr::write_tsv(Rider_LTR, "Rider_LTR_5_blast_results_all.tsv")
+
+# import and filter for valid Rider LTR sequences
+Rider_LTR <- readr::read_tsv("Rider_LTR_5_blast_results_all.tsv")
+Rider_LTR <- dplyr::mutate(Rider_LTR, scope = 1 - (abs(q_len - alig_length) / q_len))
+Rider_LTR <- dplyr::filter(Rider_LTR, perc_identity >= 50)
+```
+
+### Annotating short and long LTR sequences of the RIDER family
+
+```r
+# Annotating short LTR sequences from Rider family
 ### Short Rider LTR
 Rider_LTR_short <- dplyr::filter(
   Rider_LTR,
@@ -232,6 +300,7 @@ Rider_LTR_short <- dplyr::filter(
   )
 )
 
+# ectract the sequences of short RIDER LTR sequences
 metablastr::extract_hit_seqs_from_genomes(
   blast_tbl = Rider_LTR_short,
   subject_genomes =  subj_genomes_all_plants,
@@ -239,7 +308,7 @@ metablastr::extract_hit_seqs_from_genomes(
   separated_by_genome = FALSE
 )
 
-### Long Rider LTR
+### Annotating long LTR sequences from Rider family
 Rider_LTR_long <- dplyr::filter(
   Rider_LTR,
   dplyr::between(alig_length, 350, 450),
@@ -257,6 +326,7 @@ Rider_LTR_long <- dplyr::filter(
   )
 )
 
+# ectract the sequences of long RIDER LTR sequences
 metablastr::extract_hit_seqs_from_genomes(
   blast_tbl = Rider_LTR_long,
   subject_genomes =  subj_genomes_all_plants,
@@ -265,34 +335,15 @@ metablastr::extract_hit_seqs_from_genomes(
 )
 ```
 
-## RIDER LTR sequence BLAST
+### Visualizing RIDER LTR distribution densities across species
 
-```r
-subj_genomes_all_plants <- file.path("rider_blast_genomes/Plants", list.files("rider_blast_genomes/Plants/"))
+```r  
+install.packages("dplyr")
+install.packages("gridExtra")
 
-Rider_LTR <- metablastr::blast_genomes(
-  "Rider_LTR_5.fasta",
-  subj_genomes_all_plants,
-  task = "blastn",
-  blast_output_path = "rider_solo_ltr_blast_result",
-  cores = 28
-)
-
-readr::write_tsv(Rider_LTR, "Rider_LTR_5_blast_results_all.tsv")
-
-
-Rider_LTR <- readr::read_tsv("Rider_LTR_5_blast_results_all.tsv")
-#Rider_LTR <- dplyr::mutate(Rider_LTR, scope = 1 - (abs(q_len - alig_length) / q_len))
-Rider_LTR <- dplyr::filter(Rider_LTR, perc_identity >= 50)
-
-
-  
 library(dplyr)
-Rider_LTR %>% gg_blast_hits(scope_cutoff = 0.1)
-
-Rider_LTR %>% gg_blast_hits(scope_cutoff = 0.5)
-
-
+# add species to plot that didn't generate BLAST hits fulfilling
+# the filter criteria
 missing_species <- tibble::tibble(query_id = c("None", "None", "None"),
                subject_id = c("None", "None", "None"),
                perc_identity = c(0,0,0),
@@ -317,6 +368,7 @@ missing_species <- tibble::tibble(query_id = c("None", "None", "None"),
                scope = c(0.1,0.1,0.1),
                species = c("Stuberosum", "Cannuum", "Athaliana"))
 
+# plot BLAST hit distribution of only RIDER LTR sequences 
 p1_rider_ltr <- Rider_LTR %>% dplyr::filter(
   species %in% c(
     "Slycopersicum",
@@ -348,7 +400,7 @@ p1_rider_ltr <- Rider_LTR %>% dplyr::filter(
   xticks = 10
 ) + ggplot2::scale_fill_manual(values = ggsci::pal_lancet("lanonc")(6)[c(2,3,4,5,6)]) + ggplot2::scale_x_continuous(breaks = scales::pretty_breaks(n = 8))
 
-
+# plot BLAST alignment length distribution of only RIDER LTR sequences
 p2_rider_ltr <- Rider_LTR %>% dplyr::filter(
   species %in% c(
     "Slycopersicum",
@@ -386,6 +438,7 @@ p_rider_ltr <- gridExtra::grid.arrange(
   nrow = 1
 )
 
+# store plot as pdf file
 cowplot::save_plot(
   "Rider_5'LTR_BLAST_hits_selected_species_50perc.pdf",
   p_rider_ltr,
