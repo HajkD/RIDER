@@ -685,6 +685,38 @@ metablastr::motif_enrichment("Slycopersicum_RiderCoordinates_All.fa",
                              motifs = ABA_motifs)
 
 
+
+Rider_LTR_short_motif_compare_multi <- motif_compare_multi(
+  blast_tbl = Rider_LTR_short,
+  subject_genomes = Rider_LTR_short_subject_genomes,
+  size = 1000,
+  interval_width = 300,
+  motifs = c(ABA_motifs, "CACGTA", "CGCGTT")
+)
+
+Rider_LTR_short_motif_enrichment_multi <- motif_enrichment_multi(
+  blast_tbl = Rider_LTR_short,
+  subject_genomes = Rider_LTR_short_subject_genomes,
+  size = 1000,
+  interval_width = 300,
+  motifs = c(ABA_motifs, "CACGTA", "CGCGTT")
+)
+
+Rider_LTR_long_motif_compare_multi <- motif_compare_multi(
+  blast_tbl = Rider_LTR_long,
+  subject_genomes = Rider_LTR_long_subject_genomes,
+  size = 1000,
+  interval_width = 440,
+  motifs = c(ABA_motifs, "CACGTA", "CGCGTT")
+)
+
+Rider_LTR_long_motif_enrichment_multi <- motif_enrichment_multi(
+  blast_tbl = Rider_LTR_long,
+  subject_genomes = Rider_LTR_long_subject_genomes,
+  size = 1000,
+  interval_width = 300,
+  motifs = c(ABA_motifs, "CACGTA", "CGCGTT")
+
 ```
 
 
