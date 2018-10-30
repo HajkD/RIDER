@@ -141,7 +141,7 @@ Alternatively, it is also possible to write a `for`-loop around the function
 `RIDER` clustering denotes the analytical step in which `LTRpred` annotated 
 retrotransposon sequences are clustered across species using an optimal global alignment approach (full dynamic programming Needleman-Wunsch)
 (performed using the tool [VSEARCH](https://github.com/torognes/vsearch)).
-
+The cluster file generated with `VSEARCH` can be found at [solanocea.uc](https://github.com/HajkD/RIDER/blob/master/solanocea.uc).
 
 ## Clustering
 
@@ -149,14 +149,9 @@ retrotransposon sequences are clustered across species using an optimal global a
 # import the LTRpred_Rider_MetaTable.tsv file generated in the previous annotation step
 LTRpred_Rider_MetaTable <- LTRpred::read.ltrpred("LTRpred_Rider_MetaTable.tsv")
 LTRpred_Rider_MetaTable <- dplyr::select(LTRpred_Rider_MetaTable, -Clust_Cluster, -Clust_Target, -Clust_Perc_Ident)
-
-
-
-
-
-
+# import cluster result from VSEARCH
 cluster <- read.uc("solanocea.uc")
-
+# filter for clusters
 cluster_filter <- dplyr::filter(cluster, Type == "H")
 cluster_filter <-
   dplyr::select(cluster_filter,
@@ -167,12 +162,12 @@ cluster_filter <-
 names(cluster_filter) <-
   paste0("Clust_", names(cluster_filter))
 names(cluster_filter)[2] <- "orf.id"
-
+# join clusters with annotation file
 LTRpred_Rider_MetaTable_joined_85 <- dplyr::left_join(LTRpred_Rider_MetaTable, cluster_filter, by = "orf.id")
-
+# select only retrotransposons that have at least 85% sequence homology
+# between their 5' and 3' LTRs
 LTRpred_Rider_MetaTable_joined_85 <- LTRpred::quality.filter(LTRpred_Rider_MetaTable_joined_85, 0.85, 1, "stringent")
-
-
+# select only closely related species
 meta_tbl_sarcanum_shabrochaites_spimpinellifolium <-
   dplyr::filter(
     LTRpred_Rider_MetaTable_joined_85,
@@ -181,29 +176,27 @@ meta_tbl_sarcanum_shabrochaites_spimpinellifolium <-
       stringr::str_detect(species, "Spimpinellifolium") |
       stringr::str_detect(species, "Spennellii$")
   )
-  
-
+# select only S pennellii specific RIDER TEs
 Spennellii_Rider <- dplyr::filter(LTRpred_Rider_MetaTable_joined_85,stringr::str_detect(species, "Spennellii$"))
+# select only S pimpinellifolium specific RIDER TEs
 Spimpinellifolium_Rider <- dplyr::filter(LTRpred_Rider_MetaTable_joined_85,stringr::str_detect(species, "Spimpinellifolium"))
-  
-  
+# store as *.tsv file  
 LTRpred::pred2tsv(
   Spennellii_Rider,
   "meta_tbl_spennellii.tsv"
 )
-
+# store as *.tsv file
 LTRpred::pred2fasta(
   Spennellii_Rider,
   "../solanocea-complete.fas",
   "meta_tbl_spennellii.fasta"
 )
-
-
+# store as *.tsv file
 LTRpred::pred2tsv(
   Spimpinellifolium_Rider,
   "meta_tbl_spimpinellifolium.tsv"
 )
-
+# store as *.fasta file
 LTRpred::pred2fasta(
   Spimpinellifolium_Rider,
   "../solanocea-complete.fas",
@@ -449,13 +442,16 @@ cowplot::save_plot(
 )
 ```
 
-## RIDER Full length retrotransposon BLAST
+### Visualizing RIDER distribution densities across species
 
 ```r
+# import BLAST hits of RIDER elements
 rider_blast_df_all <- readr::read_tsv("Rider_kingdom_blast_results_all.tsv")
 rider_blast_df_all <- dplyr::mutate(rider_blast_df_all, scope = 1 - (abs(q_len - alig_length) / q_len))
+# select only hits with at least 50% perc_identity
 rider_blast_df_all_over_50 <- dplyr::filter(rider_blast_df_all, scope >= 0.5, perc_identity >= 50)
 
+# prepare selected species
 rider_blast_df_selected_Figure <-
   dplyr::filter(
     rider_blast_df_all_over_50,
@@ -543,6 +539,7 @@ p_all <- gridExtra::grid.arrange(
   nrow = 1
 )
 
+# save plot
 cowplot::save_plot(
   "Rider_full_TE_BLAST_hits_selected_species_50perc.pdf",
   p_all,
@@ -555,20 +552,14 @@ cowplot::save_plot(
 ## Motif Enrichment
 
 ```r
-
+# extract 1000 randomly sampled loci of length 5000 (each) from S lycopersicum
 Slycopersicum_RandomSeqs_1000 <- metablastr::extract_random_seqs_from_genome(
   size = 1000,
   interval_width = 5000,
-  subject_genome = "~/Desktop/Projekte/Matthias/Rider_Clustering/Slycopersicum.fa",
+  subject_genome = "Slycopersicum.fa",
   file_name = "Slycopersicum_RandomSeqs_1000.fa"
 )
 
-Athaliana_RandomSeqs_1000 <- metablastr::extract_random_seqs_from_genome(
-  size = 1000,
-  interval_width = 5000,
-  subject_genome = "~/Desktop/Projekte/Matthias/Rider_Clustering/genomes/Athaliana.fa",
-  file_name = "Athaliana_RandomSeqs_1000.fa"
-)
 
 ABA_motifs <- c("ACGCGC",
 "ACGCGG",
@@ -604,17 +595,6 @@ ABA_motifs <- c("ACGCGC",
 
 ABA_motifs <- unique(ABA_motifs)
 
-
-metablastr::motif_compare(Athaliana_RandomSeqs_1000,
-                          Slycopersicum_RandomSeqs_1000,
-                          motifs = ABA_motifs)
-
-metablastr::motif_enrichment(Athaliana_RandomSeqs_1000,
-                             Slycopersicum_RandomSeqs_1000,
-                             motifs = ABA_motifs)
-
-
-
 Sly_ABA_motif_count <- metablastr::motif_compare("Slycopersicum_RiderCoordinates_All.fa",
                           Slycopersicum_RandomSeqs_1000,
                           motifs = ABA_motifs)
@@ -634,12 +614,12 @@ readr::write_excel_csv(Sly_ABA_motif_count, "Sly_ABA_motif_counts.csv")
 
 # Alternative motifs
 Sly_alternative_motif_count <- metablastr::motif_compare("Slycopersicum_RiderCoordinates_All.fa",
-                                                 Slycopersicum_RandomSeqs_1000,
-                                                 motifs = c("CACGTA", "CGCGTT"))
+                          Slycopersicum_RandomSeqs_1000,
+                           motifs = c("CACGTA", "CGCGTT"))
 
 Sly_alternative_motif_enrichment <- metablastr::motif_enrichment("Slycopersicum_RiderCoordinates_All.fa",
-                                                         Slycopersicum_RandomSeqs_1000,
-                                                         motifs = c("CACGTA", "CGCGTT"))
+                             Slycopersicum_RandomSeqs_1000,
+                             motifs = c("CACGTA", "CGCGTT"))
 
 Sly_alternative_motif_enrichment <-
   dplyr::mutate(
@@ -677,15 +657,6 @@ readr::write_excel_csv(Sly_negative_control_motif_enrichment, "Sly_negative_cont
 readr::write_excel_csv(Sly_negative_control_motif_count, "Sly_negative_control_motif_count.csv")
 
 
-# hear shock GAA motifs
-
-
-metablastr::motif_enrichment("Slycopersicum_RiderCoordinates_All.fa",
-                             Athaliana_RandomSeqs_1000,
-                             motifs = ABA_motifs)
-
-
-
 Rider_LTR_short_motif_compare_multi <- motif_compare_multi(
   blast_tbl = Rider_LTR_short,
   subject_genomes = Rider_LTR_short_subject_genomes,
@@ -718,7 +689,6 @@ Rider_LTR_long_motif_enrichment_multi <- motif_enrichment_multi(
   motifs = c(ABA_motifs, "CACGTA", "CGCGTT")
 
 ```
-
 
 ## Calculation of N50 metric for Solanocaea species
 
