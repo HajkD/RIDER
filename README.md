@@ -207,7 +207,7 @@ LTRpred::pred2fasta(
 ## Determine the distribution of RIDER-like retrotransposons in the plant kingdom
 
 For determining the distribution of RIDER-like retrotransposons in the plant kingdom 
-we use the R packages [biomartr](https://github.com/ropensci/biomartr) and [metablastr](https://github.com/HajkD/metablastr) which 
+we use the developer versions of the R packages [biomartr](https://github.com/ropensci/biomartr#install-developer-version) and [metablastr](https://github.com/HajkD/metablastr) which 
 need to be installed before running the following commands.
 
 The `biomartr` package enables large-scale retrieval of all plant genomes
