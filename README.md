@@ -1,6 +1,6 @@
 ## Reproducible Scripts for the Publication
 
-> Matthias Benoit, Hajk-Georg Drost, Marco Catoni, Jerzy Paszkowski. __Rider__. bioRxiv (2018). doi: 
+> Matthias Benoit, Hajk-Georg Drost, Marco Catoni, Quentin Gouil, Sara Lopez-Gomollon, David Charles Baulcombe, Jerzy Paszkowski. __Environmental and epigenetic regulation of Rider retrotransposons in tomato__. bioRxiv (2019). doi: https://doi.org/10.1101/517508
 
 - [1. De novo Annotation of RIDER retrotransposons in the plant kingdom ](#de-novo-annotation-of-rider-retrotransposons-in-the-plant-kingdom)
     - [1.1. Functional de novo annotation of retrotransposons with LTRpred](#functional-de-novo-annotation-of-retrotransposons-with-ltrpred)
