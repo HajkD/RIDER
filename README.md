@@ -688,6 +688,184 @@ Rider_LTR_long_motif_enrichment_multi <- motif_enrichment_multi(
   interval_width = 300,
   motifs = c(ABA_motifs, "CACGTA", "CGCGTT")
 
+# Alternative approach: compare motif enrichment between 
+# RIDER sequences and all gene promotors (1000bp and 400bp upstream) of S. lycopersicum
+biomartr::getCollection("ensemblgenomes", "Solanum lycopersicum")
+
+# Extracting 1000 bp promotors
+extract_upstream_promotor_seqs(
+    organism = "Solanum lycopersicum",
+    annotation_file = "_db_downloads/collections/ensemblgenomes/Solanum_lycopersicum/Solanum_lycopersicum.SL3.0.42_ensemblgenomes.gtf",
+    annotation_format = "gtf",
+    genome_file = "_db_downloads/collections/ensemblgenomes/Solanum_lycopersicum/Solanum_lycopersicum.SL3.0.dna.toplevel.fa",
+    promotor_width = 1000,
+    replaceUnstranded = TRUE
+  )
+
+# Extracting 400 bp promotors
+extract_upstream_promotor_seqs(
+  organism = "Solanum lycopersicum",
+  annotation_file = "_db_downloads/collections/ensemblgenomes/Solanum_lycopersicum/Solanum_lycopersicum.SL3.0.42_ensemblgenomes.gtf",
+  annotation_format = "gtf",
+  genome_file = "_db_downloads/collections/ensemblgenomes/Solanum_lycopersicum/Solanum_lycopersicum.SL3.0.dna.toplevel.fa",
+  promotor_width = 400,
+  replaceUnstranded = TRUE
+)
+
+ABA_motifs <- c("ACGCGC",
+                "ACGCGG",
+                "ACGCGT",
+                "CCGCGC",
+                "CCGCGG",
+                "CCGCGT",
+                "GCGCGC",
+                "GCGCGG",
+                "GCGCGT",
+                "ACCGAC",
+                "GCCGAC",
+                "ACCGAC",
+                "ATCGAC",
+                "GCCGAC",
+                "GTCGAC",
+                "CAGTTA",
+                "CAGTTG",
+                "CTGTTA",
+                "CTGTTG",
+                "CGGTTA",
+                "CGGTTG",
+                "CCGTTA",
+                "CCGTTG",
+                "CAACGG",
+                "CAACTG",
+                "TAACGG",
+                "TAACTG",
+                "CCGAC",
+                "ACGT",
+                "ACGTG",
+                "GAAAAA")
+
+ABA_motifs <- unique(ABA_motifs)
+
+
+Slyco_all_genes_promotor_seqs <- Biostrings::readDNAStringSet("Solanum_lycopersicum_all_genes_promotor_seqs_1000.fa")
+
+
+### ANALYSIS for 1000bp PROMOTORS
+
+Sly_ABA_motif_count <- metablastr::motif_compare("Slycopersicum_RiderCoordinates_All.fa",
+                                                 "Solanum_lycopersicum_all_genes_promotor_seqs_1000.fa",
+                                                 motifs = ABA_motifs)
+
+Sly_ABA_motif_enrichment <- metablastr::motif_enrichment("Slycopersicum_RiderCoordinates_All.fa",
+                                                         "Solanum_lycopersicum_all_genes_promotor_seqs_1000.fa",
+                                                         motifs = ABA_motifs)
+
+Sly_ABA_motif_enrichment <-
+  dplyr::mutate(
+    Sly_ABA_motif_enrichment,
+    status = ifelse(fisher_pval <= 0.01, "significant", "not significant")
+  )
+
+readr::write_excel_csv(Sly_ABA_motif_enrichment, "Sly_ABA_motif_enrichment_promotors_all_genes_1000bp.csv")
+readr::write_excel_csv(Sly_ABA_motif_count, "Sly_ABA_motif_counts_promotors_all_genes_1000bp.csv")
+
+# Alternative motifs
+Sly_alternative_motif_count <- metablastr::motif_compare("Slycopersicum_RiderCoordinates_All.fa",
+                                                         "Solanum_lycopersicum_all_genes_promotor_seqs_1000.fa",
+                                                         motifs = c("CACGTA", "CGCGTT"))
+
+Sly_alternative_motif_enrichment <- metablastr::motif_enrichment("Slycopersicum_RiderCoordinates_All.fa",
+                                                                 "Solanum_lycopersicum_all_genes_promotor_seqs_1000.fa",
+                                                                 motifs = c("CACGTA", "CGCGTT"))
+
+Sly_alternative_motif_enrichment <-
+  dplyr::mutate(
+    Sly_alternative_motif_enrichment,
+    status = ifelse(fisher_pval <= 0.01, "significant", "not significant")
+  )
+
+readr::write_excel_csv(Sly_alternative_motif_enrichment, "Sly_alternative_motif_enrichment_all_genes_promotor_seqs_1000.csv")
+readr::write_excel_csv(Sly_alternative_motif_count, "Sly_alternative_motif_counts_all_genes_promotor_seqs_1000.csv")
+
+
+# negative control
+Sly_negative_control_motif_count_promotor_1000 <- metablastr::motif_compare("Slycopersicum_RiderCoordinates_All.fa",
+                                                              "Solanum_lycopersicum_all_genes_promotor_seqs_1000.fa",
+                                                              motifs = "TGTCGG")
+
+
+Sly_negative_control_motif_enrichment_promotor_1000 <- metablastr::motif_enrichment("Slycopersicum_RiderCoordinates_All.fa",
+                                                                      "Solanum_lycopersicum_all_genes_promotor_seqs_1000.fa",
+                                                                      motifs = "TGTCGG")
+
+Sly_negative_control_motif_enrichment_promotor_1000 <-
+  dplyr::mutate(
+    Sly_negative_control_motif_enrichment_promotor_1000,
+    status = ifelse(fisher_pval <= 0.01, "significant", "not significant")
+  )
+
+
+readr::write_excel_csv(Sly_negative_control_motif_enrichment_promotor_1000, "Sly_negative_control_motif_enrichment_promotor_1000.csv")
+readr::write_excel_csv(Sly_negative_control_motif_count_promotor_1000, "Sly_negative_control_motif_count_promotor_1000.csv")
+
+
+### ANALYSIS for 400bp PROMOTORS
+
+Sly_ABA_motif_count_400 <- metablastr::motif_compare("Slycopersicum_RiderCoordinates_All.fa",
+                                                 "Solanum_lycopersicum_all_genes_promotor_seqs_400.fa",
+                                                 motifs = ABA_motifs)
+
+Sly_ABA_motif_enrichment_400 <- metablastr::motif_enrichment("Slycopersicum_RiderCoordinates_All.fa",
+                                                         "Solanum_lycopersicum_all_genes_promotor_seqs_400.fa",
+                                                         motifs = ABA_motifs)
+
+Sly_ABA_motif_enrichment_400 <-
+  dplyr::mutate(
+    Sly_ABA_motif_enrichment_400,
+    status = ifelse(fisher_pval <= 0.01, "significant", "not significant")
+  )
+
+readr::write_excel_csv(Sly_ABA_motif_enrichment_400, "Sly_ABA_motif_enrichment_promotors_all_genes_400bp.csv")
+readr::write_excel_csv(Sly_ABA_motif_count_400, "Sly_ABA_motif_counts_promotors_all_genes_400bp.csv")
+
+# Alternative motifs
+Sly_alternative_motif_count_400 <- metablastr::motif_compare("Slycopersicum_RiderCoordinates_All.fa",
+                                                         "Solanum_lycopersicum_all_genes_promotor_seqs_400.fa",
+                                                         motifs = c("CACGTA", "CGCGTT"))
+
+Sly_alternative_motif_enrichment_400 <- metablastr::motif_enrichment("Slycopersicum_RiderCoordinates_All.fa",
+                                                                 "Solanum_lycopersicum_all_genes_promotor_seqs_400.fa",
+                                                                 motifs = c("CACGTA", "CGCGTT"))
+
+Sly_alternative_motif_enrichment_400 <-
+  dplyr::mutate(
+    Sly_alternative_motif_enrichment_400,
+    status = ifelse(fisher_pval <= 0.01, "significant", "not significant")
+  )
+
+readr::write_excel_csv(Sly_alternative_motif_enrichment_400, "Sly_alternative_motif_enrichment_all_genes_promotor_seqs_400.csv")
+readr::write_excel_csv(Sly_alternative_motif_count_400, "Sly_alternative_motif_counts_all_genes_promotor_seqs_400.csv")
+
+
+# negative control
+Sly_negative_control_motif_count_promotor_400 <- metablastr::motif_compare("Slycopersicum_RiderCoordinates_All.fa",
+                                                                            "Solanum_lycopersicum_all_genes_promotor_seqs_400.fa",
+                                                                            motifs = "TGTCGG")
+
+
+Sly_negative_control_motif_enrichment_promotor_400 <- metablastr::motif_enrichment("Slycopersicum_RiderCoordinates_All.fa",
+                                                                                    "Solanum_lycopersicum_all_genes_promotor_seqs_400.fa",
+                                                                                    motifs = "TGTCGG")
+
+Sly_negative_control_motif_enrichment_promotor_400 <-
+  dplyr::mutate(
+    Sly_negative_control_motif_enrichment_promotor_400,
+    status = ifelse(fisher_pval <= 0.01, "significant", "not significant")
+  )
+
+
+readr::write_excel_csv(Sly_negative_control_motif_enrichment_promotor_400, "Sly_negative_control_motif_enrichment_promotor_400.csv")
+readr::write_excel_csv(Sly_negative_control_motif_count_promotor_400, "Sly_negative_control_motif_count_promotor_400.csv")
 ```
 
 ## Calculation of N50 metric for Solanocaea species
