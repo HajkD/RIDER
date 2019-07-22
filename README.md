@@ -273,6 +273,128 @@ Rider_LTR <- dplyr::mutate(Rider_LTR, scope = 1 - (abs(q_len - alig_length) / q_
 Rider_LTR <- dplyr::filter(Rider_LTR, perc_identity >= 50)
 ```
 
+### Reciprocal BLAST of Rider-like hits from other species against the tomato genome
+
+Please install the R package [tidygenomics](https://github.com/const-ae/tidygenomics) to be able to perform the following analyses:
+
+```r
+Rider_kingdom_blast <-
+  readr::read_tsv("Rider_kingdom_blast_results_all.tsv", col_names = TRUE)
+
+Rider_kingdom_blast_filtered_between_50_85_similarity <-
+  dplyr::filter(Rider_kingdom_blast,
+                perc_identity >= 50,
+                perc_identity < 85,
+                qcovhsp >= 50)
+
+subj_genomes_all_plants <-
+  file.path("rider_blast_genomes/Plants",
+            list.files("rider_blast_genomes/Plants/"))
+
+metablastr::extract_hit_seqs_from_genomes(
+  Rider_kingdom_blast_filtered_between_50_85_similarity,
+  subject_genomes = subj_genomes_all_plants,
+  file_name = "Rider_BLAST_Hits_Sequences_between_50_and_85_homology.fa"
+)
+
+rider_blast_Slycopersicum_rider_like <-
+  metablastr::blast_nucleotide_to_nucleotide(
+    "Rider_BLAST_Hits_Sequences_between_50_and_85_homology.fa",
+    "rider_blast_genomes/Plants/Slycopersicum.fa",
+    evalue = 1E-5,
+    max.target.seqs = 1,
+    task = "blastn",
+    cores = 28
+  )
+
+readr::write_tsv(
+  rider_blast_Slycopersicum_rider_like,
+  "rider_blast_Slycopersicum_rider_like.tsv"
+)
+
+
+Slycopersicum_rider_like <-
+  metablastr::read_blast(file = "rider_blast_Slycopersicum_rider_like_perc_identity_85_qcovhsp_85.csv", out.format = "csv")
+
+Rider_coordinates_all <- readxl::read_xls("Rider_coordinates_all.xls")
+
+Slyco_ltrpred <-
+  LTRpred::read.ltrpred("Slycopersicum_v3_ltrpred/Slycopersicum_v3_LTRpred_DataSheet.tsv")
+
+
+Slyco_x_plus <-
+  dplyr::select(dplyr::filter(Slyco_ltrpred, strand == "+"),
+                ID,
+                chromosome,
+                start,
+                end)
+Slyco_y_plus <-
+  dplyr::select(
+    dplyr::filter(Slycopersicum_rider_like, s_end - s_start + 1 > 1),
+    query_id,
+    subject_id ,
+    s_start,
+    s_end
+  )
+names(Slyco_y_plus) <- c("ID", "chromosome", "start", "end")
+
+Slyco_x_minus <-
+  dplyr::select(dplyr::filter(Slyco_ltrpred, strand == "-"),
+                ID,
+                chromosome,
+                start,
+                end)
+names(Slyco_x_minus) <- c("ID", "chromosome", "start", "end")
+
+
+Slyco_y_minus <-
+  dplyr::select(
+    dplyr::filter(Slycopersicum_rider_like, s_start - s_end + 1 > 1),
+    query_id,
+    subject_id ,
+    s_start,
+    s_end
+  )
+names(Slyco_y_minus) <- c("ID", "chromosome", "start", "end")
+
+Slyco_y_minus_new <- Slyco_y_minus
+Slyco_y_minus_new <-
+  dplyr::mutate(Slyco_y_minus_new, start = Slyco_y_minus$end)
+Slyco_y_minus_new <-
+  dplyr::mutate(Slyco_y_minus_new, end = Slyco_y_minus$start)
+
+Slyco_z_plus <-
+  dplyr::select(dplyr::filter(Rider_coordinates_all, strand == "+"),
+                ID,
+                chromosome,
+                start,
+                end)
+names(Slyco_z_plus) <- c("ID", "chromosome", "start", "end")
+
+Slyco_z_minus <-
+  dplyr::select(dplyr::filter(Rider_coordinates_all, strand == "-"),
+                ID,
+                chromosome,
+                start,
+                end)
+names(Slyco_z_minus) <- c("ID", "chromosome", "start", "end")
+
+Slyco_z_minus_new <- Slyco_z_minus
+Slyco_z_minus_new <-
+  dplyr::mutate(Slyco_z_minus_new, start = Slyco_z_minus$end)
+Slyco_z_minus_new <-
+  dplyr::mutate(Slyco_z_minus_new, end = Slyco_z_minus$start)
+
+
+Slyco_rider_overlap_plus <- tidygenomics::genome_intersect(Slyco_x_plus, Slyco_y_plus,  by=c("chromosome", "start", "end"), mode="both")
+
+Slyco_rider_overlap_minus <- tidygenomics::genome_intersect(Slyco_x_minus_new, Slyco_y_minus_new,  by=c("chromosome", "start", "end"), mode="both")
+
+Slyco_rider_overlap_plus_rider_coordinates <- tidygenomics::genome_intersect(Slyco_z_plus, Slyco_y_plus,  by=c("chromosome", "start", "end"), mode="both")
+
+Slyco_rider_overlap_minus_rider_coordinates <- tidygenomics::genome_intersect(Slyco_z_minus, Slyco_y_minus_new,  by=c("chromosome", "start", "end"), mode="both")
+```
+
 ### Annotating short and long LTR sequences of the RIDER family
 
 ```r
